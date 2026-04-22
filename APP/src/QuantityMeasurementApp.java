@@ -69,30 +69,34 @@ public class QuantityMeasurementApp {
             return base / target.getFactor();
         }
 
-        // ===== ADDITION (UC6 CORE) =====
+        // ===== ADD (UC6) =====
         public QuantityLength add(QuantityLength other) {
 
             if (other == null) {
-                throw new IllegalArgumentException("Other quantity cannot be null");
+                throw new IllegalArgumentException("Other cannot be null");
             }
 
-            // Convert both to base unit
             double sumBase = this.toBase() + other.toBase();
 
-            // Convert back to THIS object's unit
-            double resultValue = sumBase / this.unit.getFactor();
+            double result = sumBase / this.unit.getFactor();
 
-            return new QuantityLength(resultValue, this.unit);
+            return new QuantityLength(result, this.unit);
         }
 
-        // Static version (optional)
-        public static QuantityLength add(QuantityLength a, QuantityLength b) {
+        // ===== ADD WITH TARGET UNIT (UC7 CORE) =====
+        public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
 
-            if (a == null || b == null) {
-                throw new IllegalArgumentException("Operands cannot be null");
+            if (other == null || targetUnit == null) {
+                throw new IllegalArgumentException("Invalid input");
             }
 
-            return a.add(b);
+            // Convert both → base
+            double sumBase = this.toBase() + other.toBase();
+
+            // Convert → target unit
+            double result = sumBase / targetUnit.getFactor();
+
+            return new QuantityLength(result, targetUnit);
         }
 
         @Override
@@ -101,11 +105,11 @@ public class QuantityMeasurementApp {
         }
     }
 
-    // ===== STATIC CONVERSION API =====
+    // ===== STATIC CONVERT =====
     public static double convert(double value, LengthUnit source, LengthUnit target) {
 
         if (source == null || target == null) {
-            throw new IllegalArgumentException("Units cannot be null");
+            throw new IllegalArgumentException("Invalid unit");
         }
 
         if (!Double.isFinite(value)) {
@@ -117,47 +121,26 @@ public class QuantityMeasurementApp {
         return base / target.getFactor();
     }
 
-    // ===== DEMO METHODS =====
-
-    public static void demonstrateLengthEquality(QuantityLength q1, QuantityLength q2) {
-        System.out.println(q1 + " == " + q2 + " → " + q1.equals(q2));
-    }
-
-    public static void demonstrateLengthConversion(double value, LengthUnit from, LengthUnit to) {
-        System.out.println("convert(" + value + ", " + from + ", " + to + ") = "
-                + convert(value, from, to));
-    }
-
-    public static void demonstrateLengthAddition(QuantityLength q1, QuantityLength q2) {
-        System.out.println("add(" + q1 + ", " + q2 + ") = " + q1.add(q2));
-    }
-
-    // ===== MAIN =====
+    // ===== DEMO =====
     public static void main(String[] args) {
 
-        // Equality
-        demonstrateLengthEquality(
-                new QuantityLength(1.0, LengthUnit.FEET),
-                new QuantityLength(12.0, LengthUnit.INCH)
-        );
+        QuantityLength a = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength b = new QuantityLength(12.0, LengthUnit.INCH);
 
-        // Conversion
-        demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCH);
+        // UC6
+        System.out.println("UC6: " + a.add(b)); // 2 FEET
 
-        // Addition (UC6)
-        demonstrateLengthAddition(
-                new QuantityLength(1.0, LengthUnit.FEET),
-                new QuantityLength(12.0, LengthUnit.INCH)
-        ); // → 2 FEET
+        // UC7 (target = FEET)
+        System.out.println("UC7 FEET: " + a.add(b, LengthUnit.FEET));
 
-        demonstrateLengthAddition(
-                new QuantityLength(12.0, LengthUnit.INCH),
-                new QuantityLength(1.0, LengthUnit.FEET)
-        ); // → 24 INCH
+        // UC7 (target = INCH)
+        System.out.println("UC7 INCH: " + a.add(b, LengthUnit.INCH));
 
-        demonstrateLengthAddition(
-                new QuantityLength(1.0, LengthUnit.YARD),
-                new QuantityLength(3.0, LengthUnit.FEET)
-        ); // → 2 YARD
+        // UC7 (target = YARD)
+        System.out.println("UC7 YARD: " + a.add(b, LengthUnit.YARD));
+
+        // UC7 (CM example)
+        QuantityLength c = new QuantityLength(2.54, LengthUnit.CENTIMETER);
+        System.out.println("UC7 CM: " + c.add(b, LengthUnit.CENTIMETER));
     }
 }
