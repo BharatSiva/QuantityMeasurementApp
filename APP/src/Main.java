@@ -1,4 +1,4 @@
-public class QuantityMeasurementApp {
+public class Main {
 
     // ===== ENUM =====
     enum LengthUnit {

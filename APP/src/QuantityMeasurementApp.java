@@ -1,6 +1,4 @@
 public class QuantityMeasurementApp {
-}
-public class QuantityMeasurementApp {
 
     // Inner class Feet
     public static class Feet {
