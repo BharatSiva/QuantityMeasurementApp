@@ -1,53 +1,163 @@
 public class QuantityMeasurementApp {
 
-    // Inner class Feet
-    public static class Feet {
-        private final double value;
+    // ===== ENUM =====
+    enum LengthUnit {
 
-        // Constructor
-        public Feet(double value) {
-            this.value = value;
+        FEET(1.0),
+        INCH(1.0 / 12.0),
+        YARD(3.0),
+        CENTIMETER(0.393701 / 12.0);
+
+        private final double factor;
+
+        LengthUnit(double factor) {
+            this.factor = factor;
         }
 
-        // Getter (optional)
-        public double getValue() {
-            return value;
-        }
-
-        // Override equals method
-        @Override
-        public boolean equals(Object obj) {
-
-            // Same reference check (Reflexive)
-            if (this == obj) {
-                return true;
-            }
-
-            // Null check
-            if (obj == null) {
-                return false;
-            }
-
-            // Type check
-            if (this.getClass() != obj.getClass()) {
-                return false;
-            }
-
-            // Cast safely
-            Feet other = (Feet) obj;
-
-            // Compare using Double.compare
-            return Double.compare(this.value, other.value) == 0;
+        public double getFactor() {
+            return factor;
         }
     }
 
-    // Main method for testing
+    // ===== CLASS =====
+    static class QuantityLength {
+
+        private final double value;
+        private final LengthUnit unit;
+
+        public QuantityLength(double value, LengthUnit unit) {
+
+            if (unit == null) {
+                throw new IllegalArgumentException("Unit cannot be null");
+            }
+
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException("Invalid value");
+            }
+
+            this.value = value;
+            this.unit = unit;
+        }
+
+        // Convert to base (feet)
+        private double toBase() {
+            return value * unit.getFactor();
+        }
+
+        // ===== EQUALITY =====
+        @Override
+        public boolean equals(Object obj) {
+
+            if (this == obj) return true;
+
+            if (obj == null || getClass() != obj.getClass()) return false;
+
+            QuantityLength other = (QuantityLength) obj;
+
+            return Double.compare(this.toBase(), other.toBase()) == 0;
+        }
+
+        // ===== CONVERSION =====
+        public double convertTo(LengthUnit target) {
+
+            if (target == null) {
+                throw new IllegalArgumentException("Target unit cannot be null");
+            }
+
+            double base = this.toBase();
+
+            return base / target.getFactor();
+        }
+
+        // ===== ADDITION (UC6 CORE) =====
+        public QuantityLength add(QuantityLength other) {
+
+            if (other == null) {
+                throw new IllegalArgumentException("Other quantity cannot be null");
+            }
+
+            // Convert both to base unit
+            double sumBase = this.toBase() + other.toBase();
+
+            // Convert back to THIS object's unit
+            double resultValue = sumBase / this.unit.getFactor();
+
+            return new QuantityLength(resultValue, this.unit);
+        }
+
+        // Static version (optional)
+        public static QuantityLength add(QuantityLength a, QuantityLength b) {
+
+            if (a == null || b == null) {
+                throw new IllegalArgumentException("Operands cannot be null");
+            }
+
+            return a.add(b);
+        }
+
+        @Override
+        public String toString() {
+            return value + " " + unit;
+        }
+    }
+
+    // ===== STATIC CONVERSION API =====
+    public static double convert(double value, LengthUnit source, LengthUnit target) {
+
+        if (source == null || target == null) {
+            throw new IllegalArgumentException("Units cannot be null");
+        }
+
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Invalid value");
+        }
+
+        double base = value * source.getFactor();
+
+        return base / target.getFactor();
+    }
+
+    // ===== DEMO METHODS =====
+
+    public static void demonstrateLengthEquality(QuantityLength q1, QuantityLength q2) {
+        System.out.println(q1 + " == " + q2 + " → " + q1.equals(q2));
+    }
+
+    public static void demonstrateLengthConversion(double value, LengthUnit from, LengthUnit to) {
+        System.out.println("convert(" + value + ", " + from + ", " + to + ") = "
+                + convert(value, from, to));
+    }
+
+    public static void demonstrateLengthAddition(QuantityLength q1, QuantityLength q2) {
+        System.out.println("add(" + q1 + ", " + q2 + ") = " + q1.add(q2));
+    }
+
+    // ===== MAIN =====
     public static void main(String[] args) {
-        Feet f1 = new Feet(1.0);
-        Feet f2 = new Feet(1.0);
 
-        boolean result = f1.equals(f2);
+        // Equality
+        demonstrateLengthEquality(
+                new QuantityLength(1.0, LengthUnit.FEET),
+                new QuantityLength(12.0, LengthUnit.INCH)
+        );
 
-        System.out.println("Are values equal? " + result);
+        // Conversion
+        demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCH);
+
+        // Addition (UC6)
+        demonstrateLengthAddition(
+                new QuantityLength(1.0, LengthUnit.FEET),
+                new QuantityLength(12.0, LengthUnit.INCH)
+        ); // → 2 FEET
+
+        demonstrateLengthAddition(
+                new QuantityLength(12.0, LengthUnit.INCH),
+                new QuantityLength(1.0, LengthUnit.FEET)
+        ); // → 24 INCH
+
+        demonstrateLengthAddition(
+                new QuantityLength(1.0, LengthUnit.YARD),
+                new QuantityLength(3.0, LengthUnit.FEET)
+        ); // → 2 YARD
     }
 }
